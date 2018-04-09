@@ -1,70 +1,42 @@
 class Dialog
 
-  def initialize
-    @card = CardDeck.new
-  end
-
   def account
-    puts "В банке дилера #{@diler.bank}"
+    puts "В банке дилера #{@dealer.bank}"
     puts "В банке игрока #{@player.bank}"
   end
+
+  def show_hand(cards)
+    cards.each { |card| puts "Масть: #{card.suit}, Имя: #{card.rank}, Номинал #{card.number}" }
+  end
+
+  def show(whose)
+    case whose
+    when :player
+      puts "Вы"
+      hand = @player.hand
+      show_hand(hand)
+      puts "Ваши очки: #{@player.score}"
+    when :dealer
+      puts "Дилер"
+      hand = @dealer.hand
+      show_hand(hand)
+      puts "Очки дилера: #{@dealer.score}"
+    end
+  end
   
-  def draw
-    @player.increment_bank
-    @diler.increment_bank
-  end
-
-  def player_win
-    @player.increment_bank
-    @player.increment_bank
-  end
-
-  def diler_win
-    @diler.increment_bank
-    @diler.increment_bank
-  end
-  
-  def win
-    arr_diler = @card.pick_card_diler
-    arr_player = @card.pick_card_player
-    score_diler = @card.score(arr_diler)
-    score_player = @card.score(arr_player)
-    
-    if (score_diler > 21) && (score_player > 21)
-      puts "Оба набрали больше 21! Ничья"
-      draw
-      return
-    end
-
-    if score_diler > 21
-      puts "Дилер перебрал! Игрок победил"
-      player_win
-      return
-    end
-    
-    if score_player > 21
-      puts "Игрок перебрал!Дилер победил"
-      diler_win
-      return
-    end
-
-    if score_diler == score_player
-      puts "Ничья. Оба набрали по #{score_player}"
-      draw
-      return
-    end
-
-    if score_diler > score_player
-      puts "Дилер победил"
-      diler_win
+  def add_card
+    if !@new_game.limit_player?
+      @new_game.pick(:player)
+      @new_game.pass
     else
-      puts "Игрок победил"
-      player_win
+      puts "Вы взяли 3 карты. Ход переходит дилеру."
+      @new_game.pass
     end
+    select_action
   end
-  
+
   def select_action
-    if limit_player? && (limit_diler_card? || limit_diler_score?)
+    if @new_game.limit?
       puts "Игроки достигли лимита на выбор. Открываемся."
       open_card
     end
@@ -78,7 +50,8 @@ class Dialog
     
     case choice
     when 1
-      pass
+      @new_game.pass
+      select_action
     when 2
       add_card
     when 3
@@ -89,38 +62,11 @@ class Dialog
     end
   end
 
-  def limit_player?
-    @card.pick_card_player.length == 3
-  end
-
-  def limit_diler_card?
-    @card.pick_card_diler.length == 3
-  end
-
-  def limit_diler_score?
-    arr = @card.pick_card_diler
-    @card.score(arr) > 16
-  end
-
-  def pass
-    arr = @card.pick_card_diler
-    if limit_diler_score?
-      puts "дилер передает ход"
-    else
-      @card.pick(:diler)
-    end
+  def start(player, dealer)
+    @new_game = Game.new(player, dealer)
+    @new_game.begin_game
+    show(:player)
     select_action
-  end
-
-  def add_card
-    if !limit_player?
-      @card.pick(:player)
-      @card.show(:player)
-      pass
-    else
-      puts "Вы взяли 3 карты. Ход переходит дилеру."
-      pass
-    end
   end
 
   def continue_game?
@@ -130,11 +76,10 @@ class Dialog
     
     case choice
     when 1
-      @card = CardDeck.new
       puts "Создана новая колода"
-      begin_game_player
-      begin_game_diler
-      select_action
+      @player.clear_hand
+      @dealer.clear_hand
+      start(@player, @dealer)
     when 2
       puts "Спасибо за игру."
       abort
@@ -144,29 +89,32 @@ class Dialog
     end
   end
 
+  def result
+    res = @new_game.win
+    case res
+    when :much
+      puts "Оба набрали больше 21! Ничья"
+    when :much_dealer
+      puts "Дилер перебрал! Игрок победил"
+    when :much_player
+      puts "Игрок перебрал!Дилер победил"
+    when :draw
+      puts "Ничья."
+    when :dealer_win
+      puts "Дилер победил"
+    when :player_win
+      "Игрок победил"
+    end
+  end
+
   def open_card
     puts "Итог:"
-    @card.show(:player)
+    result
+    show(:player)
     puts "------------------"
-    @card.show(:diler)
-    win
+    show(:dealer)
     account
     continue_game?
-  end
-
-  def begin_game_player
-    @card.pick(:player)
-    @card.pick(:player)
-    @card.show(:player)
-    @player.decrement_bank
-  end
-
-  def begin_game_diler
-    @diler.decrement_bank
-    @card.pick(:diler)
-    @card.pick(:diler)
-    puts "Карты дилера"
-    puts "[* , *]"
   end
 
   def output
@@ -174,12 +122,9 @@ class Dialog
       puts 'Введите Ваше имя?'
       player_name = gets.chomp
       @player = Player.new(player_name)
-      @diler = Diler.new
-      puts "Создана игрок: #{player_name}"
-      puts "#{player_name} получил две карты"
-      begin_game_player
-      begin_game_diler
-      select_action
+      @dealer = Player.new
+      puts "Создан игрок: #{player_name}"
+      start(@player, @dealer)
     end
   end
 end
