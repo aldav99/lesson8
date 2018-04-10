@@ -3,12 +3,13 @@ class Player
   def initialize(name = 'dealer', bank = 100)
     @name = name
     @bank = bank
+    @hand = []
   end
 
   attr_reader :bank
 
   def hand
-    @hand ||= []
+    @hand
   end
 
   def hand_total
@@ -25,7 +26,9 @@ class Player
 
   def score
     sum = 0
-    @hand.each { |card| sum = card.add(sum) }
+    @hand.each do |card| 
+      sum + card.value <= 21 ? sum += card.value : sum += card.alter_value
+    end
     sum
   end
   

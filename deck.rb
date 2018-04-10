@@ -1,31 +1,19 @@
 class Deck
   
   SUITS = [:heart, :diamond, :club, :spade]
-  RANKS = {ace:10, king: 10, queen: 10, jack: 10, 
-           two: 2, three: 3, four: 4, five: 5, six: 6,
-           seven: 7, eight: 8, nine: 9, ten: 10}
+  
+  RANKS = [:ace, :king, :queen, :jack, 
+           :two, :three, :four, :five, :six,
+           :seven, :eight, :nine, :ten]
   
   def initialize
     @cards ||= []
     SUITS.each do |suit|
-      RANKS.each_pair do |rank, value|
-        @cards << Card.new(suit, rank, value)
+      RANKS.each do |rank|
+        @cards << Card.new(suit, rank)
       end
     end
     @cards.shuffle!
-  end
-
-  def rank
-    RANKS.each_pair { |rank, value| puts "#{rank} => #{value}" }
-  end
-
-  def suit
-    SUITS.each { |suit| puts "#{suit}" }
-    
-  end
-
-  def cards
-    @cards.each { |cards| puts "#{cards}"}
   end
 
   def number_cards

@@ -6,37 +6,35 @@ class Dialog
   end
 
   def show_hand(cards)
-    cards.each { |card| puts "Масть: #{card.suit}, Имя: #{card.rank}, Номинал #{card.number}" }
+    cards.each { |card| puts card }
   end
 
   def show(whose)
     case whose
     when :player
       puts "Вы"
-      hand = @player.hand
-      show_hand(hand)
+      show_hand(@player.hand)
       puts "Ваши очки: #{@player.score}"
     when :dealer
       puts "Дилер"
-      hand = @dealer.hand
-      show_hand(hand)
+      show_hand(@dealer.hand)
       puts "Очки дилера: #{@dealer.score}"
     end
   end
   
   def add_card
-    if !@new_game.limit_player?
-      @new_game.pick(:player)
-      @new_game.pass
+    if !@game.limit_player?
+      @game.pick(:player)
+      @game.pass
     else
       puts "Вы взяли 3 карты. Ход переходит дилеру."
-      @new_game.pass
+      @game.pass
     end
     select_action
   end
 
   def select_action
-    if @new_game.limit?
+    if @game.limit?
       puts "Игроки достигли лимита на выбор. Открываемся."
       open_card
     end
@@ -50,7 +48,7 @@ class Dialog
     
     case choice
     when 1
-      @new_game.pass
+      @game.pass
       select_action
     when 2
       add_card
@@ -63,8 +61,8 @@ class Dialog
   end
 
   def start(player, dealer)
-    @new_game = Game.new(player, dealer)
-    @new_game.begin_game
+    @game = Game.new(player, dealer)
+    @game.begin_game
     show(:player)
     select_action
   end
@@ -90,7 +88,7 @@ class Dialog
   end
 
   def result
-    res = @new_game.win
+    res = @game.win
     case res
     when :much
       puts "Оба набрали больше 21! Ничья"

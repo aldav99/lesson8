@@ -1,34 +1,25 @@
 class Card
   
+  VALUES = {ace:11, king: 10, queen: 10, jack: 10, 
+           two: 2, three: 3, four: 4, five: 5, six: 6,
+           seven: 7, eight: 8, nine: 9, ten: 10}
+
   attr_reader :suit, :rank, :number
 
-  def initialize(suit, rank, number)
+  def initialize(suit, rank)
     @suit = suit
     @rank = rank
-    @number = number
   end
 
   def to_s
-    "Масть: #{@suit}. Номинал: #{@rank}. Кол-во очков #{@number}."
+    "Масть: #{@suit}. Номинал: #{@rank}. Кол-во очков #{VALUES[self.rank]}."
   end
 
-  def add(value)
-    if self.number == 10
-      (value + self.number)  > 21  ? value + 1 : value + 10
-    else
-      value + self.number
-    end
+  def value
+    VALUES[self.rank]
   end
 
-  def self.score(cards)
-    sum = 0
-    cards.each do |card|
-      if card.number == 10
-        sum  > (21 - 10) ? sum += 1 : sum += 10
-      else
-        sum += card.number
-      end
-    end
-    sum
+  def alter_value
+    self.rank == :ace ? 1 : VALUES[self.rank]
   end
 end
